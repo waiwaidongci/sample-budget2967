@@ -1,71 +1,32 @@
 {
-  "study": "CampaignPlan",
-  "row": "BaselineScenario",
-  "run": "PowerRun",
-  "review": "BudgetDecision",
-  "study_label": "触达计划",
-  "row_label": "基线情景",
-  "field_label": "双侧两比例样本预算",
-  "fields": [
-    [
-      "p0",
-      "基线点击率 (0–1)",
-      "number"
-    ],
-    [
-      "p1",
-      "候选点击率 (0–1)",
-      "number"
-    ],
-    [
-      "cost_per_contact",
-      "单次触达成本 (元)",
-      "number"
-    ],
-    [
-      "budget",
-      "总预算 (元)",
-      "number"
-    ]
-  ],
+  "project": "AttributionProject",
+  "event": "TouchClickEvent",
+  "run": "AttributionRun",
+  "project_label": "归因项目",
+  "event_label": "触达/点击事件",
+  "field_label": "一对一归因配对",
   "defaults": {
-    "alpha": 0.05,
-    "power": 0.8,
-    "simulations": 10000
+    "window_hours": 72
   },
-  "names": [
-    "榆灯·冬季专题",
-    "榆灯·周刊入口",
-    "榆灯·新栏目预告"
-  ],
-  "note": "独立等样本双组、双侧正态近似。模拟功效用于检验近似；低事件率应谨慎采用，正式实验须另行预注册。",
+  "channels": ["短信", "推送", "邮件", "广告"],
+  "names": ["榆灯·冬季全渠道归因"],
+  "note": "同一人的触达与点击在约定时窗内一对一配对:先让归因点击最多,再让总等待最短,同分按事件编号定。迟到补报与撤回触发重算并改派原配对;补报与计算并发时,旧计算不得发布为当前结果;配对明细与分渠道首点率同源同版、一次性切换。",
   "accent": "59 0.13 15",
   "dark": "31 0.055 15",
   "bg": "96 0.025 75",
-  "id": "gb-0040",
-  "direction": "实验设计",
-  "title": "榆灯触达样本预算台",
-  "slug": "sample-budget",
-  "algorithm": "两比例实验样本量正态近似与二项Monte Carlo功效验证",
-  "entities": "CampaignPlan / BaselineScenario / PowerRun / BudgetDecision",
-  "scenario": "内容触达基线点击率→最小可检测差异与预算→预注册方案；单双侧语义固定双侧，功效模拟固定seed",
-  "visual": "研究预算手稿、栗红奶油",
-  "oracle": "功效随样本趋势；公式对norm.ppf；MDE零与越界概率拒绝",
+  "id": "gb-0041",
+  "direction": "归因核算",
+  "title": "榆灯全渠道归因台",
+  "slug": "touch-attribution",
+  "algorithm": "逐人二分图最小费用最大流:配对数最大→总等待最小→事件编号定序",
+  "entities": "AttributionProject / TouchClickEvent / AttributionRun",
+  "scenario": "同一人收到多个渠道触达后,一次点击常被各渠道重复认领;按约定时窗一对一配对,版本化发布归因结果",
+  "visual": "渠道账簿手稿、栗红奶油",
+  "oracle": "暴力枚举复核配对数与总等待;同版本重算结果一致;过期计算不得发布",
   "frontend": 18244,
   "backend": 19244,
   "db_port": 17744,
   "database": "PostgreSQL16",
-  "batch": 1,
-  "index": 4,
-  "roles": [
-    "admin",
-    "analyst",
-    "viewer"
-  ],
-  "states": [
-    "queued",
-    "running",
-    "completed",
-    "failed"
-  ]
+  "roles": ["admin", "analyst", "viewer"],
+  "states": ["queued", "running", "published", "superseded", "stale", "failed"]
 }

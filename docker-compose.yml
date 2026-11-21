@@ -1,22 +1,22 @@
-name: sample-budget
+name: touch-attribution
 services:
   db:
     image: postgres:16-alpine
-    container_name: ${COMPOSE_PROJECT_NAME:-sample-budget}-db
+    container_name: ${COMPOSE_PROJECT_NAME:-touch-attribution}-db
     environment:
-      POSTGRES_DB: research
-      POSTGRES_USER: research
+      POSTGRES_DB: attribution
+      POSTGRES_USER: attribution
       POSTGRES_PASSWORD: ${DB_PASSWORD:-local-demo-db-2026}
     ports: ["${DB_PORT:-17744}:5432"]
     volumes: ["db-data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U research -d research"]
+      test: ["CMD-SHELL", "pg_isready -U attribution -d attribution"]
       interval: 3s
       timeout: 5s
       retries: 40
   redis:
     image: redis:7-alpine
-    container_name: ${COMPOSE_PROJECT_NAME:-sample-budget}-redis
+    container_name: ${COMPOSE_PROJECT_NAME:-touch-attribution}-redis
     command: redis-server --appendonly yes
     volumes: ["redis-data:/data"]
     healthcheck:
@@ -26,11 +26,11 @@ services:
       retries: 20
   backend:
     build: ./backend
-    container_name: ${COMPOSE_PROJECT_NAME:-sample-budget}-backend
+    container_name: ${COMPOSE_PROJECT_NAME:-touch-attribution}-backend
     environment: &app-env
-      DATABASE_URL: postgresql+psycopg://research:${DB_PASSWORD:-local-demo-db-2026}@db:5432/research
+      DATABASE_URL: postgresql+psycopg://attribution:${DB_PASSWORD:-local-demo-db-2026}@db:5432/attribution
       REDIS_URL: redis://redis:6379/0
-      JWT_SECRET: ${JWT_SECRET:-local-demo-sample-budget-replace-for-production}
+      JWT_SECRET: ${JWT_SECRET:-local-demo-touch-attribution-replace-for-production}
       SEED_DEMO: ${SEED_DEMO:-true}
     ports: ["${BACKEND_PORT:-19244}:8000"]
     volumes: ["run-artifacts:/app/artifacts"]
@@ -44,7 +44,7 @@ services:
       retries: 40
   worker:
     build: ./backend
-    container_name: ${COMPOSE_PROJECT_NAME:-sample-budget}-worker
+    container_name: ${COMPOSE_PROJECT_NAME:-touch-attribution}-worker
     command: python -m src.worker
     environment: *app-env
     volumes: ["run-artifacts:/app/artifacts"]
@@ -59,7 +59,7 @@ services:
       retries: 20
   frontend:
     build: ./frontend
-    container_name: ${COMPOSE_PROJECT_NAME:-sample-budget}-frontend
+    container_name: ${COMPOSE_PROJECT_NAME:-touch-attribution}-frontend
     ports: ["${FRONTEND_PORT:-18244}:80"]
     depends_on:
       backend: {condition: service_healthy}

@@ -1,7 +1,27 @@
-import {store,load} from '../stores/research.js';
-import {runs} from '../api/research.js';
-import {table} from '../components/common/table.js';
+import {store} from '../stores/attribution.js';
+import {projects,runs} from '../api/attribution.js';
+import {projectSelect,bindProjectSelect} from '../components/common/project-select.js';
+import {runList} from '../components/common/run-list.js';
+import {resultView} from '../components/common/result-view.js';
+import {status} from '../components/common/status.js';
 import {esc} from '../utils/format.js';
-import {bindForm} from '../hooks/forms.js';
-export async function render(id){const complete=store.runs.filter(r=>r.status==='completed');const r=id?await runs.get(id):null;return `<div class="eyebrow">04 / BUSINESS RELEASE</div><h1>复核与研究交付</h1><p>负责人记录使用范围和下一步动作。复核记录不可覆盖，观察员只能导出已复核结果。</p>${r?`<h2>#${r.id} ${esc(r.name)}</h2>${r.review?`<div class="method-note"><strong>已复核</strong><p>${esc(r.review.note)}</p><small>${esc(r.review.author)} · ${esc(r.review.created_at)}</small></div>`:localStorage.getItem('research-role')==='admin'?`<form id="review-form"><label>复核意见与后续动作<textarea name="note" minlength="5" maxlength="2000" required placeholder="写明数据范围、方法边界和复测/预算建议"></textarea></label><button type="submit">确认复核并归档</button></form>`:'<div class="method-note">等待负责人复核；分析师可以查看全部计算依据。</div>'}`:''}${table(['运行','复核状态','动作'],complete.map(x=>[x.name,x.review?x.review.note:'待复核',{html:`<a href="#review/${x.id}">查看 / 复核 →</a>`}]))}`;}
-export function bind(refresh){bindForm('review-form',async data=>{const id=Number(location.hash.split('/')[1]);await runs.review(id,data.note);await load();refresh();});}
+export async function render(id){
+  if(id){
+    const r=await runs.get(id);
+    return `<div class="eyebrow">04 / RETROSPECTIVE · RUN ${r.id}</div><h1>版本复盘 #${r.id} ${status(r.status)}</h1>
+    <div class="checksum">项目 ${esc(r.project_name)} · 基于事件版本 v${r.base_version} · 快照 SHA256 ${r.checksum||'—'} · ${esc((r.created_at||'').replace('T',' ').slice(0,19))} 排队</div>
+    ${r.status==='stale'?'<div class="method-note">补报与计算并发:本计算完成时事件版本已前进,按约定未发布为当前结果,仅留档备查。</div>':''}
+    ${r.status==='failed'?`<div class="error">计算失败:${esc(r.error)}</div>`:''}
+    ${r.status==='superseded'?'<div class="method-note">本版曾被发布,后被更新版本替换;旧版结果仍可在此查阅。</div>':''}
+    ${r.is_current?'<div class="method-note">本版即当前发布版本。</div>':''}
+    ${r.result?resultView(r):'<p class="method-note">计算在途,结果尚未产生。</p>'}
+    <p><a class="button secondary" href="#review">← 返回版本列表</a></p>`;
+  }
+  const p=store.projects.find(x=>x.id===store.projectId);
+  const rows=p?await projects.runs(p.id):[];
+  return `<div class="eyebrow">04 / RETROSPECTIVE</div><h1>复盘与版本档案</h1>
+  <p>每次计算的配对与分渠道首点率都按版本留档:当前发布、历史已发布、过期未发布均可查对,迟到补报与撤回引起的改派在版本间可追。</p>
+  <div class="toolbar">${projectSelect()}</div>
+  <h2>版本记录 <small>${rows.length} 次计算</small></h2>${runList(rows)}`;
+}
+export function bind(refresh){bindProjectSelect(refresh);}

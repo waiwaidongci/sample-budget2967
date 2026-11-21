@@ -9,3 +9,10 @@
 .worksheet {background:transparent;border:1px solid var(--ink);border-left:12px solid var(--accent)}
 .login form {border-top:10px solid var(--accent)}
 @media(max-width:767px){.hero{grid-template-columns:1fr}.folio{font-size:65px}}
+
+/* Attribution ledger: publication states on the version ribbon. */
+.status.published {background:color-mix(in oklch,var(--accent) 30%,var(--paper));border-color:var(--accent)}
+.status.superseded {background:color-mix(in oklch,var(--accent) 12%,var(--paper))}
+.status.stale {color:oklch(45% .16 25);border-style:dashed}
+.status.running {background:color-mix(in oklch,var(--accent) 18%,var(--paper))}
+.strip b {font-family:'IBM Plex Mono',monospace}
